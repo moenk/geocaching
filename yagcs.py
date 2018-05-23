@@ -11,6 +11,7 @@ txt_hint="magnetisch"
 # imports
 import os
 import time
+import pprint
 import exifread
 import requests
 from selenium import webdriver
@@ -57,18 +58,25 @@ def getGPS(filepath):
 def reverse_geocode(latlng):
     url="https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat="+str(latlng[0])+"4&lon="+str(latlng[1])+"&zoom=18&addressdetails=1"
     data = requests.get(url).json()
-    osm_keys=['county','village','city_district','suburb']
+    osm_keys=['county','town','village','residential','city_district','suburb','hamlet','parking']
     mc_name=""
     for admin_level in osm_keys:
+        if admin_level in data:
+            mc_name = data[admin_level]
         if admin_level in data['address']:
             mc_name = data['address'][admin_level]
     osm_id=data['osm_id']
     # ref aus overpass holen
     url2 = "https://www.overpass-api.de/api/interpreter?data=[out:json];way("+str(osm_id)+");out;"
     data2=requests.get(url2).json()
-    mc_road=data2['elements'][0]['tags']['ref']
-    if mc_road=="":
-        mc_road = data['address']['road']
+    osm_keys2=['name','path','road','ref_int','ref']
+    mc_road=""
+    if len(data2['elements'])>0:
+        for road_ref in osm_keys2:
+            if road_ref in data2['elements'][0]:
+                mc_road = data2['elements'][0][road_ref]
+            if road_ref in data2['elements'][0]['tags']:
+                mc_road = data2['elements'][0]['tags'][road_ref]
     # zusammenbauen
     mc_road=mc_road.replace(" ","")
     location=mc_name+" ("+mc_road+")"
