@@ -10,8 +10,8 @@ txt_hint="magnetisch"
 
 # imports
 import os
+import math
 import time
-import pprint
 import exifread
 import requests
 from selenium import webdriver
@@ -26,6 +26,17 @@ def convert_to_degress(value):
     m = float(value.values[1].num) / float(value.values[1].den)
     s = float(value.values[2].num) / float(value.values[2].den)
     return d + (m / 60.0) + (s / 3600.0)
+
+
+# background tile ermitteln
+def getBackgroundTile(lat_deg, lon_deg):
+    zoom=15
+    lat_rad = math.radians(lat_deg)
+    n = 2.0 ** zoom
+    xtile = int((lon_deg + 180.0) / 360.0 * n)
+    ytile = int((1.0 - math.log(math.tan(lat_rad) + (1 / math.cos(lat_rad))) / math.pi) / 2.0 * n)
+    smurl = r"http://a.tile.openstreetmap.org/{0}/{1}/{2}.png"
+    return smurl.format(zoom, xtile, ytile)
 
 
 # hole koordinaten aus dem bild, gib decimal und text im GC format
@@ -108,7 +119,9 @@ for subdir, dirs, files in os.walk(image_path):
 
             # adresse holen aus koordinaten
             formatted_address=reverse_geocode(gps)
+            background_tile=getBackgroundTile(gps[0],gps[1])
             print ("Geocache-Name:",formatted_address)
+            print ("Background:",background_tile)
 
             # page login
             browser=browser_aufmachen()
@@ -150,6 +163,8 @@ for subdir, dirs, files in os.walk(image_path):
             time.sleep(2)
             browser.find_element_by_id("ctl00_ContentBody_tbGeocacheName").clear()
             browser.find_element_by_id("ctl00_ContentBody_tbGeocacheName").send_keys(txt_name_prefix+formatted_address)
+            browser.find_element_by_id("ctl00_ContentBody_tbBackgroundUrl").clear()
+            browser.find_element_by_id("ctl00_ContentBody_tbBackgroundUrl").send_keys(background_tile)
             time.sleep(2)
             cke_frame=browser.find_element(By.TAG_NAME,"iframe")
             browser.switch_to.frame(cke_frame)
@@ -185,8 +200,9 @@ for subdir, dirs, files in os.walk(image_path):
             browser.find_element_by_id("ctl00_ContentBody_ImageUploadControl1_uxUpload").click()
 
             # final stage
+            time.sleep(10)
             browser.get(saved_url)
-            time.sleep(5)
+            time.sleep(3)
             browser.find_element_by_id("btnSubmit").click()
             time.sleep(2)
             browser.find_element_by_id("reviewerNoteText").send_keys(txt_reviewer)
@@ -194,3 +210,5 @@ for subdir, dirs, files in os.walk(image_path):
 
             # done
             browser.quit()
+            print ("Done.")
+
