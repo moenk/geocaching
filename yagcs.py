@@ -12,8 +12,10 @@ txt_hint="magnetisch"
 import os
 import math
 import time
+import pprint
 import exifread
 import requests
+import send2trash
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -69,6 +71,7 @@ def getGPS(filepath):
 def reverse_geocode(latlng):
     url="https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat="+str(latlng[0])+"4&lon="+str(latlng[1])+"&zoom=18&addressdetails=1"
     data = requests.get(url).json()
+    pprint.pprint(data)
     osm_keys=['county','town','village','residential','city_district','suburb','hamlet','parking']
     mc_name=""
     for admin_level in osm_keys:
@@ -78,8 +81,9 @@ def reverse_geocode(latlng):
             mc_name = data['address'][admin_level]
     osm_id=data['osm_id']
     # ref aus overpass holen
-    url2 = "https://www.overpass-api.de/api/interpreter?data=[out:json];way("+str(osm_id)+");out;"
+    url2 = "https://overpass.kumi.systems/api/interpreter?data=[out:json];way("+str(osm_id)+");out;"
     data2=requests.get(url2).json()
+    pprint.pprint(data2)
     osm_keys2=['name','path','road','ref_int','ref']
     mc_road=""
     if len(data2['elements'])>0:
@@ -129,7 +133,7 @@ for subdir, dirs, files in os.walk(image_path):
             time.sleep(2)
             browser.find_element_by_id("Username").send_keys(txt_username)
             browser.find_element_by_id("Password").send_keys(txt_password)
-            browser.find_element_by_id("Login").click()
+            browser.find_element_by_id("SignIn").click()
 
             # stage 1
             time.sleep(5)
@@ -156,7 +160,7 @@ for subdir, dirs, files in os.walk(image_path):
             browser.find_element_by_id("btnContinue").click()
 
             # stage 2
-            time.sleep(2)
+            time.sleep(5)
             browser.find_element_by_id("btnContinue").click()
 
             # stage 3
@@ -185,7 +189,7 @@ for subdir, dirs, files in os.walk(image_path):
             browser.find_element_by_id("btnSubmit").click()
 
             # upload stage
-            time.sleep(2)
+            time.sleep(5)
             saved_url=browser.current_url
             href_id=""
             contents = browser.find_elements_by_xpath('//a[@href]')
@@ -210,5 +214,7 @@ for subdir, dirs, files in os.walk(image_path):
 
             # done
             browser.quit()
+            time.sleep(2)
+            send2trash.send2trash(file_path)
             print ("Done.")
 
