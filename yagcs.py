@@ -1,6 +1,6 @@
 # constants
 image_path="J:\\DCIM\\1000GRMN"
-txt_username="***"
+txt_username="mo***"
 txt_password="***"
 txt_name_prefix="MoCache: "
 txt_description=r"Ein Geocache für cachende Motorradfahrer. Einfach zu finden, nur ranfahren, zugreifen, loggen und weiter. Anspruchsvolle Geocacher suchen sich besser ein anderes Ziel. Bitte Vorsicht an der Straße und eigenen Stift mitbringen!"
@@ -100,9 +100,9 @@ def reverse_geocode(latlng):
 
 # mach mal einen browser auf
 def browser_aufmachen():
-    profile = webdriver.FirefoxProfile()
-    driver = webdriver.Firefox(executable_path=r'c:\\python36\\geckodriver.exe',firefox_profile=profile)
-    driver.maximize_window()
+    chromeOptions = webdriver.ChromeOptions()
+    chromeOptions.add_argument("--start-maximized")
+    driver = webdriver.Chrome('c:\\Python36\chromedriver.exe',chrome_options=chromeOptions)
     return (driver)
 
 
@@ -131,7 +131,7 @@ for subdir, dirs, files in os.walk(image_path):
             browser=browser_aufmachen()
             browser.get("https://www.geocaching.com/account/login")
             time.sleep(2)
-            browser.find_element_by_id("Username").send_keys(txt_username)
+            browser.find_element_by_id("UsernameOrEmail").send_keys(txt_username)
             browser.find_element_by_id("Password").send_keys(txt_password)
             browser.find_element_by_id("SignIn").click()
 
